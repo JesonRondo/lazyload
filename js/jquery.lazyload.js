@@ -5,37 +5,41 @@
  * @blog      http://vicbeta.com
  * @email     pancnlz@gmail.com
  * @create    2013-11-04
- * @update    2013-11-04
+ * @update    2013-11-08
  * @version   1.0.0
  * @reference http://blog.csdn.net/huli870715/article/details/8126519
  */
-(function($) {
-    var App = {};
+(function($, document, window, undefined) {
+    $.fn.lazyload = function(callback) {
+        // Lazyload class
+        function Lazyload($els, callback) {
+            // 唯一标示
+            this.stamp = +new Date + Math.random() >>> 0;
 
-    App.lazyload = (function($) {
-        // 默认配置
-        var config = {
-            mod: 'auto',    // 分为auto、manul
-            IMG_SRC_DATA: 'img-lazyload',
-            AREA_DATA_CLS: 'area-lazyload'
+            // 设置
+            this.settings = {
+                IMG_DATA_SRC: 'data-src'
+            };
+
+            // 用来存放需要懒加载的图片和模块        
+            this.imgArr = [];
+            this.areaArr = [];
+
+            // lazyload 的元素
+            this.$els = $els;
+
+            // 图片或 dom 加载完成的回调函数
+            this.callback = callback && typeof callback === 'function' ? callback : null;
+
+            // init
+            this._filterItems();
         };
-
-        var IMG_SRC_DATA = '',
-            AREA_DATA_CLS = '';
-
-        // 用来存放需要懒加载的图片和模块
-        var imgArr = [],
-            areaArr = [];
-
-        // 支持用户回调的事件类型
-        var eventType = 'lazyload';
 
         /**
          * 获取目标节点距离页面顶部高度
          * @param {HTML Element} el
-         * @private
          */
-        var _getTargetY = function(el) {
+        Lazyload.prototype._getTargetY = function(el) {
             var tp = el.offsetTop;
             if (el.offsetParent) {
                 while (el = el.offsetParent) {
@@ -45,82 +49,82 @@
             return tp;
         };
 
-        /** 
+        /**
          * @desc 处理需要懒加载的图片 
-         * @private 
-         */    
-        var _filterImgs = function() {
-            if (config.mod === 'auto') {
-                // 自动模式  
-                var $imgs = $('img');
-                $imgs.each(function() {
-                    var $this = $(this),
-                        dataSrc = $this.attr(IMG_SRC_DATA);
-                    
-                    imgArr.push(this);
-                    
-                    // 先计算出每个图片距离页面顶部的高度，避免在事件事件处理函数中进行大量重复计算
-                    $this.targetY = _getTargetY($this[0]);
+         */
+        Lazyload.prototype._filterImgs = function() {
+            var $imgs,
+                IMG_DATA_SRC,
+                callback = this.callback,
+                hasCallback = callback ? true : false;
 
-                    // 对于已存在IMG_SRC_DATA的，可能其它实例处理过，我们直接跳过去
-                    if (!dataSrc) {
-                        $this.attr(IMG_SRC_DATA, $this.attr('src'));
-                        $this.removeAttr('src');
-                    }
-                });
-            } else {
-                // 手动模式下，已经在需要懒加载的IMG中设置了IMG_SRC_DATA属性，所以不作任何处理
-                var $imgs = $('img').filter('[' + IMG_SRC_DATA + ']');
-                $imgs.each(function() {
-                    var $this = $(this);
+            IMG_DATA_SRC = this.settings.IMG_DATA_SRC;
+            $imgs = this.$els.filter('img').filter('[' + IMG_DATA_SRC + ']');
 
-                    imgArr.push(this);
+            $imgs.each($.proxy(function(i, el) {
+                var $this = $(el),
+                    data_src = $this.attr(IMG_DATA_SRC);
 
-                    // 先计算出每个图片距离页面顶部的高度，避免在事件事件处理函数中进行大量重复计算
-                    $this.targetY = _getTargetY($this[0]);
-                });
-            }
+                if (!data_src) {
+                    return;
+                }
+
+                $this.css('opacity', 0);
+
+                el.onload = function() {
+                    $(this).animate({
+                        'opacity': 1
+                    }, 300, function() {
+                        if (hasCallback) {
+                            callback();
+                        }
+                    });
+                };
+                this.imgArr.push(el);
+
+                // 先计算出每个图片距离页面顶部的高度，避免在事件事件处理函数中进行大量重复计算
+                $this.targetY = this._getTargetY($this[0]);
+            }, this));
         };
 
         /**
          * @desc 处理需要懒加载的模块
-         * @private
          */
-        var _filterAreas = function() {
-            var $areas = $('textarea').find('.' + AREA_DATA_CLS);
-            $areas.each(function() {
-                var $this = $(this);
+        Lazyload.prototype._filterAreas = function() {
+            var $areas = this.$els.filter('textarea');
 
-                areaArr.push(this);
+            $areas.each($.proxy(function(i, el) {
+                var $this = $(el);
+                this.areaArr.push(el);
 
-                $this.targetY = _getTargetY($this[0]);
-            });
+                $this.targetY = this._getTargetY($this[0]);
+            }, this));
         };
 
         /**
          * @desc 处理需要懒加载的图片和模块入口
-         * @private
          */
-        var _filterItems = function() {
-            _filterImgs();
-            _filterAreas();
+        Lazyload.prototype._filterItems = function() {
+            this._filterImgs();
+            this._filterAreas();
         };
 
         /**
          * @desc 检查需要懒加载的节点是否进入可视区域
          * @param {jQuery Object} el
-         * @private
          */
-        var _checkBounding = function($el) {
+        Lazyload.prototype._checkBounding = function($el) {
+            var scrollY, seeY, targetY;
+
             // 页面滚动条高度
-            var scrollY = document.body.scrollTop || document.documentElement.scrollTop || window.pageYOffset || 0;
+            scrollY = document.body.scrollTop || document.documentElement.scrollTop || window.pageYOffset || 0;
             // 浏览器可视区域高度
-            var seeY = window.innerHeight || document.documentElement.clientHeight;
-        
+            seeY = window.innerHeight || document.documentElement.clientHeight;
+
             if ($el.targetY) {
-                var targetY = $el.targetY;
+                targetY = $el.targetY;
             } else {
-                var targetY = _getTargetY($el[0]);
+                targetY = this._getTargetY($el[0]);
             }
 
             // 当目标节点进入可使区域
@@ -131,140 +135,58 @@
             }
         };
 
-        /**
-         * @desc window节点的scroll和resize的事件处理函数
-         * @private
-         */
-        var _eventHandler = function() {
-            // 全部加载完时，解绑事件
-            if (imgArr.length <= 0 && areaArr.length <= 0) {
-                $(window).off('scroll:lazyload');
-                $(window).off('resize:lazyload');
-            }
+        (function($this, callback, $, window) {
+            var lz = new Lazyload($this, callback);
 
-            $.each(imgArr, function(i, el) {
-                if (el !== undefined) {
-                    var $img = $(el);
-                    if (_checkBounding($img)) {
-                        $img.attr('src', $img.attr(IMG_SRC_DATA));
-                        $img.trigger(eventType);
-                        $img.unbind(eventType);
+            $(window)
+                .on('scroll.lz' + lz.stamp + ' resize.lz' + lz.stamp, function() {
+                    var i, len, el;
 
-                        imgArr.splice(i, 1);
+                    // 全部加载完时，解绑事件
+                    if (lz.imgArr.length <= 0 && lz.areaArr.length <= 0) {
+                        $(window).off('scroll.lz' + lz.stamp);
+                        $(window).off('resize.lz' + lz.stamp);
                     }
-                }
-            });
 
-            $.each(areaArr,function(i, el) {
-                if (el !== undefined) {
-                    var $area = $(el);
-                    if (_checkBounding($area)) {
-                        $area.hide();
-                        $area.removeClass(AREA_DATA_CLS);
-                        var $div = $('<div>').html($area.val());
-                        $div.insertBefore($area);
+                    for (i = 0, len = lz.imgArr.length; i < len;) {
+                        el = lz.imgArr[i];
 
-                        areaArr.splice(i, 1);
+                        if (el) {
+                            var $img = $(el);
+                            if (lz._checkBounding($img)) {
+                                $img.attr('src', $img.attr(lz.settings.IMG_DATA_SRC))
+                                    .attr(lz.settings.IMG_DATA_SRC, '');
+                                lz.imgArr.splice(i, 1);
+                                len--;
+                            } else {
+                                i++;
+                            }
+                        }
                     }
-                }
-            });
-        };
 
-        /**
-         * @desc 事件绑定
-         * @private
-         */
-        var _initEvent = function() {
-            $(window).on('scroll:lazyload', _eventHandler);
-            $(window).on('resize:lazyload', _eventHandler);
-            _eventHandler();
-        };
+                    for (i = 0, len = lz.areaArr.length; i < len;) {
+                        el = lz.areaArr[i];
 
-        /** 
-         * @desc 特定元素即将出现时的回调函数
-         * @param {Function} func
-         * @param {jQuery Obj} $el
-         * @private
-         */
-        var _addCallback = function(func, $el) {
-            if (func == null) {
-                return;
-            }
-            
-            if ($el == null) {
-                $.each(imgArr, function(i, el) {
-                    $(el).bind(eventType, function(event) {
-                        func.call($el, event);
-                    });
-                });
-            } else {
-                $el.bind(eventType, function(event) {
-                    func.call($el, event);
-                });
-            }
-        };
+                        if (el) {
+                            var $area = $(el);
+                            if (lz._checkBounding($area)) {
+                                $area.hide();
+                                $area.removeClass(AREA_DATA_CLS);
+                                var $div = $('<div>').html($area.val());
+                                $div.insertBefore($area);
+                                $area.remove();
 
-        /** 
-         * @desc 初始化自定义配置
-         * @param {object} settings
-         * @private
-         */
-        var _initialize = function(settings) {
-            if (!(settings == null)) {
-                config = $.extend(config, settings);
-            }
+                                lz.areaArr.splice(i, 1);
+                                len--;
+                            } else {
+                                i++;
+                            }
+                        }
+                    }
+                })
+                .trigger('scroll.lazyload' + lz.stamp);
+        }($(this), callback, $, window));
 
-            IMG_SRC_DATA = config.IMG_SRC_DATA;
-            AREA_DATA_CLS = config.AREA_DATA_CLS;
-
-            _filterItems();
-            _initEvent();
-        };
-
-        return {
-            init: function() {
-                _initialize(this.arguments);   
-            },
-            addCallback: function() {
-                _addCallback(this.arguments);
-            }
-        };
-    } ($));
-
-    /**
-     * @desc 启用lazyload对外方法
-     * @param {object} settings
-     *      var settings = {
-     *          mod: 'auto',                    // 分为auto、manul
-     *          IMG_SRC_DATA: 'img-lazyload',   // img data属性
-     *          AREA_DATA_CLS: 'area-lazyload'  // textarea class属性
-     *      };
-     * @param {jQuery obj} $filter 待绑定回调事件的dom集合 可选参数，存在回调函数的情况下，为空将为所有满足条件的img元素绑定回调事件
-     * @param {function} callback 特定元素即将出现时的回调函数
-     */
-    $.lazyload = function() {
-        var i, len,
-            paramAry = Array.prototype.slice.call(arguments),
-            paramObj = {};
-
-        for (i = 0, len = paramAry.length; i < len; i++) {
-            if (typeof paramAry[i] === 'function' && !paramObj['callback']) {
-                paramObj['callback'] = paramAry[i];
-                continue;
-            }
-
-            if (paramAry[i].length > 0 && !paramObj['$filter']) {
-                paramObj['$filter'] = paramAry[i];
-                continue;
-            }
-
-            if (typeof paramAry[i] === 'object' && !paramObj['settings']) {
-                paramObj['settings'] = paramAry[i];
-                continue;
-            }
-        }
-
-        App.lazyload.init(paramObj['settings']);
-        App.lazyload.addCallback(paramObj['callback'], paramObj['$filter']);
+        return this;
     };
-}(jQuery));
+}(jQuery, document, window));
