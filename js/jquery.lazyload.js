@@ -171,7 +171,6 @@
                             var $area = $(el);
                             if (lz._checkBounding($area)) {
                                 $area.hide();
-                                $area.removeClass(AREA_DATA_CLS);
                                 var $div = $('<div>').html($area.val());
                                 $div.insertBefore($area);
                                 $area.remove();
