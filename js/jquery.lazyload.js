@@ -183,7 +183,7 @@
                         }
                     }
                 })
-                .trigger('scroll.lazyload' + lz.stamp);
+                .trigger('scroll.lz' + lz.stamp);
         }($(this), callback, $, window));
 
         return this;
