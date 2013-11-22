@@ -1,4 +1,10 @@
 lazyload
-========
+====
 
-lazyload image &amp; module
+image lazyload
+
+###useage
+
+    $('.detail-img').lazyload(callback);
+
+	callback: callback for image load
