@@ -8,4 +8,5 @@ image lazyload
     $('.detail-img').lazyload(callback);
 
 ###params
-* callback: callback for image load
+
+* callback[option]: callback function for image loaded to call
