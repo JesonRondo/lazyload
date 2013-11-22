@@ -7,4 +7,5 @@ image lazyload
 
     $('.detail-img').lazyload(callback);
 
-	callback: callback for image load
+###params
+* callback: callback for image load
