@@ -11,7 +11,7 @@ image lazyload
 
 ##### js call
 
-    MGTOOL.lazyload($dom, callback);
+    MOGU.lazyload($dom, callback);
 
 ### params
 
