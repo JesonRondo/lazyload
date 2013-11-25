@@ -9,10 +9,10 @@
  * @version   1.0.0
  * @reference http://blog.csdn.net/huli870715/article/details/8126519
  */
-var MGTOOL = MGTOOL || {};
+var MOGU = MOGU || {};
 
-(function(MGTOOL, $, document, window) {
-    var LZ_Settings = {
+(function(MOGU, $, document, window) {
+    var LazyLoad_Settings = {
         cls: 'img-lazyload',
         dsrc: 'd-src'
     };
@@ -59,7 +59,7 @@ var MGTOOL = MGTOOL || {};
         var $imgs, dsrc, callback = this.callback,
             hasCallback = callback ? true : false;
 
-        dsrc = LZ_Settings.dsrc;
+        dsrc = LazyLoad_Settings.dsrc;
         $imgs = this.$els.filter('img').filter('[' + dsrc + ']');
 
         $imgs.each($.proxy(function(i, el) {
@@ -126,7 +126,7 @@ var MGTOOL = MGTOOL || {};
      * @param {jQuery object} $dom jQuery dom 对象
      * @param {function} callback 加载完毕回调参数
      */
-    MGTOOL.lazyload = function($dom, callback) {
+    MOGU.lazyload = function($dom, callback) {
         var lz = new Lazyload($dom, callback);
 
         $(window)
@@ -145,8 +145,8 @@ var MGTOOL = MGTOOL || {};
 
                         var $img = $(el);
                         if (lz._checkBounding($img)) {
-                            $img.attr('src', $img.attr(LZ_Settings.dsrc))
-                                .attr(LZ_Settings.dsrc, '');
+                            $img.attr('src', $img.attr(LazyLoad_Settings.dsrc))
+                                .attr(LazyLoad_Settings.dsrc, '');
                             lz.imgArr.splice(i, 1);
                             len--;
                         } else {
@@ -160,6 +160,6 @@ var MGTOOL = MGTOOL || {};
 
     // 默认调用
     $(document).ready(function() {
-        MGTOOL.lazyload($('.' + LZ_Settings.cls));
+        MOGU.lazyload($('.' + LazyLoad_Settings.cls));
     });
-}(MGTOOL, jQuery, document, window));
+}(MOGU, jQuery, document, window));
