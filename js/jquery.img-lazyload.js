@@ -123,11 +123,11 @@ var MOGU = MOGU || {};
 
     /**
      * @desc lazyload 调用
-     * @param {jQuery object} $dom jQuery dom 对象
+     * @param {string} query 选择器
      * @param {function} callback 加载完毕回调参数
      */
-    MOGU.lazyload = function($dom, callback) {
-        var lz = new Lazyload($dom, callback);
+    MOGU.lazyload = function(query, callback) {
+        var lz = new Lazyload($(query), callback);
 
         $(window)
             .on('scroll.lz' + lz.stamp + ' resize.lz' + lz.stamp, function() {
@@ -160,6 +160,6 @@ var MOGU = MOGU || {};
 
     // 默认调用
     $(document).ready(function() {
-        MOGU.lazyload($('.' + LazyLoad_Settings.cls));
+        MOGU.lazyload('.' + LazyLoad_Settings.cls);
     });
 }(MOGU, jQuery, document, window));
