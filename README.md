@@ -11,11 +11,11 @@ image lazyload
 
 ##### js call
 
-    MOGU.lazyload($dom, callback);
+    MOGU.lazyload(query, callback);
 
 ### params
 
-* $dom: jQuery dom object
+* query: selecter
 * callback[option]: callback function for image loaded to call
 
 ### notice
